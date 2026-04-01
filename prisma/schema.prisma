@@ -1,0 +1,36 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite" // เปลี่ยนเป็น sqlite และลบ url ทิ้ง
+}
+
+model User {
+  id            String          @id @default(uuid())
+  username      String          @unique
+  phone         String
+  role          String          @default("SELLER") // SQLite ใช้ String แทน Enum
+  password_hash String
+  leads         ValuationLead[]
+}
+
+model ValuationLead {
+  id            String     @id @default(uuid())
+  user_id       String
+  user          User       @relation(fields: [user_id], references: [id])
+  car_specs     String     // SQLite ไม่มีประเภท Json ให้เก็บเป็น String (แปลง JSON.stringify เอาตอนเซฟ)
+  ai_price      Float
+  offered_price Float
+  status        String     @default("PENDING") // ใช้ String แทน Enum
+  phone         String
+  created_at    DateTime   @default(now())
+}
+
+model SalesDataset {
+  id                String   @id @default(uuid())
+  car_specs         String   // ใช้ String เก็บค่า JSON
+  actual_sale_price Float
+  created_at        DateTime @default(now())
+}
