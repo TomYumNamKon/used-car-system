@@ -4,14 +4,14 @@ import { NextResponse } from 'next/server';
 export class MLController {
     static async triggerRetrain() {
         try {
-            // ใส่ await เพื่อให้เซิร์ฟเวอร์รอจนกว่าโมเดลจะเทรนเสร็จ
+            // ระบบจะรอ (await) อยู่ตรงนี้จนกว่าขั้นตอนใน MLService จะเสร็จทั้งหมด
             const result = await MLService.startAsyncRetrainTask();
 
-            // พอเสร็จแล้วค่อยตอบกลับหน้าเว็บ
+            // เมื่อเสร็จแล้ว ค่อยตอบกลับหน้าเว็บ
             return NextResponse.json(
                 { 
                     message: "เทรนโมเดลเสร็จสมบูรณ์แล้ว!",
-                    data: result // ส่งค่าความแม่นยำกลับไปด้วย
+                    data: result // ส่งข้อมูลความแม่นยำ (Metrics) แนบกลับไปด้วย
                 }, 
                 { status: 200 }
             );

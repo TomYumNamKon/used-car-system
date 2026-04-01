@@ -6,7 +6,7 @@ export class MLService {
     static async startAsyncRetrainTask() {
         const dataset = await this.fetchDatasetForTraining();
         
-        // 1. สั่ง Preprocess และรอจนกว่าจะเสร็จ
+        // 1. สั่ง Preprocess และใส่ await เพื่อรอให้เสร็จ
         const prepRes = await fetch(`${this.pythonAPIUrl}/preprocess`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -14,15 +14,14 @@ export class MLService {
         });
         if (!prepRes.ok) throw new Error("เตรียมข้อมูล (Preprocess) ไม่สำเร็จ");
 
-        // 2. สั่ง Train และรอจนกว่าจะเสร็จ
+        // 2. สั่ง Train และใส่ await เพื่อรอให้สอนโมเดลเสร็จ
         const trainRes = await fetch(`${this.pythonAPIUrl}/train`, {
             method: 'POST'
         });
         if (!trainRes.ok) throw new Error("สอนโมเดล (Train) ไม่สำเร็จ");
 
-        // 3. รับผลลัพธ์ (เช่น ค่าความแม่นยำ MAE, R2) กลับมา
-        const trainData = await trainRes.json();
-        return trainData; 
+        // 3. คืนค่าผลลัพธ์ความแม่นยำกลับไป
+        return await trainRes.json();
     }
 
     private static async fetchDatasetForTraining() {

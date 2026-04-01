@@ -19,10 +19,8 @@ export default function AdminSalesPage() {
   const [mileage, setMileage] = useState('');
   const [transmission, setTransmission] = useState('');
   const [fuel, setFuel] = useState('');
-  // เพิ่ม State ใหม่ 2 ตัว
   const [tax, setTax] = useState('');
   const [mpg, setMpg] = useState('');
-  
   const [actualPrice, setActualPrice] = useState('');
 
   const fetchSales = async () => {
@@ -80,7 +78,6 @@ export default function AdminSalesPage() {
     e.preventDefault();
     setIsSaving(true);
     
-    // ยัด tax กับ mpg เข้าไปใน JSON ด้วย
     const carSpecsJson = JSON.stringify({ 
       brand, model, year, engineSize, mileage, transmission, fuel, tax, mpg 
     });
@@ -94,7 +91,6 @@ export default function AdminSalesPage() {
       if (res.ok) {
         alert("บันทึกข้อมูลสำเร็จ!");
         setIsModalOpen(false);
-        // ล้างข้อมูลฟอร์มให้เกลี้ยง
         setBrand(''); setModel(''); setYear(''); setEngineSize(''); setMileage(''); 
         setTransmission(''); setFuel(''); setTax(''); setMpg(''); setActualPrice('');
         fetchSales();
@@ -117,86 +113,110 @@ export default function AdminSalesPage() {
 
       return (
         <div>
-          <div className="font-bold text-gray-800">{obj.brand || ''} {obj.model || ''} {obj.year ? `(${obj.year})` : ''}</div>
-          <div className="text-xs text-gray-500 mt-1">{details}</div>
+          <div className="font-bold text-slate-800 text-base">
+            {obj.brand || ''} {obj.model || ''} {obj.year ? <span className="text-slate-500 font-medium ml-1">({obj.year})</span> : ''}
+          </div>
+          <div className="text-xs text-slate-500 mt-1 font-medium">{details}</div>
         </div>
       );
     } catch { return specsStr; }
   };
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
+    <div className="p-6 md:p-10 max-w-7xl mx-auto font-sans relative z-10">
+      
+      {/* Header & Buttons */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">ข้อมูลการขาย (Sales Dataset)</h1>
-          <p className="text-gray-500 text-sm mt-1">ข้อมูลทั้งหมด {sales.length} รายการสำหรับใช้ Retrain AI</p>
+          <h1 className="text-3xl font-black text-slate-800 tracking-tight drop-shadow-sm">ข้อมูลการขาย (Sales Dataset)</h1>
+          <p className="text-slate-500 mt-2 font-medium">ข้อมูลทั้งหมด {sales.length} รายการสำหรับใช้ Retrain AI</p>
         </div>
-        <div className="flex space-x-3">
+        
+        <div className="flex flex-wrap gap-3">
           <button 
             onClick={handleRetrain}
             disabled={isRetraining || sales.length === 0}
-            className={`px-5 py-2.5 rounded-md font-semibold shadow-sm transition-colors flex items-center ${
-              isRetraining ? 'bg-gray-400' : 'bg-amber-500 hover:bg-amber-600 text-white'
+            className={`px-6 py-3 rounded-xl font-bold shadow-md transition-all active:scale-95 flex items-center ${
+              isRetraining 
+                ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
+                : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-200/50'
             }`}
           >
             <svg className={`w-5 h-5 mr-2 ${isRetraining ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
-            {isRetraining ? 'กำลังส่งข้อมูล...' : 'เทรนข้อมูล'}
+            {isRetraining ? 'กำลังส่งข้อมูล...' : 'เทรนข้อมูล AI'}
           </button>
 
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-blue-600 text-white px-5 py-2.5 rounded-md hover:bg-blue-700 shadow-sm font-semibold transition-colors"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-blue-200/50 transition-all active:scale-95"
           >
-            + เพิ่มเติมการขาย
+            + เพิ่มการขายใหม่
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-gray-900">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="p-4 border-b">วันที่ขาย</th>
-              <th className="p-4 border-b w-1/2">รายละเอียดรถ</th>
-              <th className="p-4 border-b">ราคาขายจริง (ปอนด์)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sales.length === 0 ? (
-              <tr><td colSpan={3} className="p-8 text-center text-gray-500">ยังไม่มีข้อมูลในระบบ</td></tr>
-            ) : (
-              sales.map((sale: any) => (
-                <tr key={sale.id} className="border-b hover:bg-gray-50 transition-colors">
-                  <td className="p-4 align-top whitespace-nowrap">{new Date(sale.sold_at).toLocaleDateString('th-TH')}</td>
-                  <td className="p-4 align-top">{parseSpecs(sale.car_specs)}</td>
-                  <td className="p-4 text-green-600 font-bold align-top whitespace-nowrap">£ {sale.actual_sale_price.toLocaleString()}</td>
+      {/* Table Section */}
+      <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/40 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-slate-700 whitespace-nowrap">
+            <thead className="bg-slate-50/50 border-b border-slate-200/80 text-sm uppercase tracking-wider font-bold text-slate-500">
+              <tr>
+                <th className="p-5 pl-8 w-40">วันที่ขาย</th>
+                <th className="p-5 w-auto">รายละเอียดรถ</th>
+                <th className="p-5 pr-8 text-right w-48">ราคาขายจริง</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {sales.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="p-10 text-center text-slate-400 font-medium italic">
+                    ยังไม่มีข้อมูลในระบบ หรือกำลังโหลด...
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                sales.map((sale: any) => (
+                  <tr key={sale.id} className="hover:bg-blue-50/50 transition-colors group">
+                    <td className="p-5 pl-8 align-top font-medium text-slate-600">
+                      {new Date(sale.sold_at).toLocaleDateString('th-TH')}
+                    </td>
+                    <td className="p-5 align-top">
+                      {parseSpecs(sale.car_specs)}
+                    </td>
+                    <td className="p-5 pr-8 text-right align-top">
+                      <span className="inline-block px-3 py-1.5 bg-emerald-50 text-emerald-700 font-black rounded-lg border border-emerald-100">
+                        £ {sale.actual_sale_price.toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
+      {/* Modal Popup (เพิ่มข้อมูล) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-5 text-gray-800 border-b pb-3">เพิ่มข้อมูลการขายใหม่</h2>
-            <form onSubmit={handleAddManualSale} className="space-y-4">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white/95 backdrop-blur-xl border border-white/50 p-6 md:p-8 rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            
+            <h2 className="text-2xl font-black mb-6 text-slate-800 tracking-tight">เพิ่มข้อมูลการขายใหม่</h2>
+            
+            <form onSubmit={handleAddManualSale} className="space-y-5">
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ยี่ห้อ (Brand)</label>
-                  <select required value={brand} onChange={handleBrandChange} className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ยี่ห้อ (Brand)</label>
+                  <select required value={brand} onChange={handleBrandChange} className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium transition-all appearance-none">
                     <option value="" disabled>เลือกยี่ห้อ</option>
                     {brandsList.map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">รุ่น (Model)</label>
-                  <select required value={model} onChange={e => setModel(e.target.value)} disabled={!brand || modelsList.length === 0} className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-gray-100 text-gray-900">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">รุ่น (Model)</label>
+                  <select required value={model} onChange={e => setModel(e.target.value)} disabled={!brand || modelsList.length === 0} className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium disabled:bg-slate-100 disabled:text-slate-400 transition-all appearance-none">
                     <option value="" disabled>
                       {!brand ? 'กรุณาเลือกยี่ห้อก่อน' : (modelsList.length === 0 ? 'กำลังโหลดรุ่น...' : 'เลือกรุ่น')}
                     </option>
@@ -205,70 +225,66 @@ export default function AdminSalesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ปีที่ผลิต (Year)</label>
-                  <input type="number" required min="1990" max={new Date().getFullYear()} value={year} onChange={e => setYear(e.target.value)} placeholder="เช่น 2019" className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none text-gray-900" />
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ปีที่ผลิต (Year)</label>
+                  <input type="number" required min="1990" max={new Date().getFullYear()} value={year} onChange={e => setYear(e.target.value)} placeholder="เช่น 2019" className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium transition-all" />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">เครื่องยนต์ (Engine)</label>
-                  <input type="number" step="0.1" required value={engineSize} onChange={e => setEngineSize(e.target.value)} placeholder="เช่น 1.5" className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none text-gray-900" />
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">เครื่องยนต์ (L)</label>
+                  <input type="number" step="0.1" required value={engineSize} onChange={e => setEngineSize(e.target.value)} placeholder="เช่น 1.5" className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium transition-all" />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">เลขไมล์ (Mileage)</label>
-                  <input type="number" required min="0" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="เช่น 50000" className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none text-gray-900" />
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">เลขไมล์</label>
+                  <input type="number" required min="0" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="เช่น 50000" className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium transition-all" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ระบบเกียร์ (Transmission)</label>
-                  <select required value={transmission} onChange={e => setTransmission(e.target.value)} className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ระบบเกียร์</label>
+                  <select required value={transmission} onChange={e => setTransmission(e.target.value)} className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium transition-all appearance-none">
                     <option value="" disabled>เลือกเกียร์</option>
                     {transmissionsList.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">เชื้อเพลิง (Fuel)</label>
-                  <select required value={fuel} onChange={e => setFuel(e.target.value)} className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">เชื้อเพลิง</label>
+                  <select required value={fuel} onChange={e => setFuel(e.target.value)} className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium transition-all appearance-none">
                     <option value="" disabled>เลือกเชื้อเพลิง</option>
                     {fuelsList.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
               </div>
 
-              {/* เพิ่ม Grid ใหม่สำหรับ Tax และ MPG */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ภาษี (Tax)</label>
-                  <input type="number" required value={tax} onChange={e => setTax(e.target.value)} placeholder="เช่น 145" className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none text-gray-900" />
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ภาษี (Tax)</label>
+                  <input type="number" required value={tax} onChange={e => setTax(e.target.value)} placeholder="เช่น 145" className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium transition-all" />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">อัตราสิ้นเปลือง (MPG)</label>
-                  <input type="number" step="0.1" required value={mpg} onChange={e => setMpg(e.target.value)} placeholder="เช่น 55.4" className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none text-gray-900" />
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">กินน้ำมัน (MPG)</label>
+                  <input type="number" step="0.1" required value={mpg} onChange={e => setMpg(e.target.value)} placeholder="เช่น 55.4" className="w-full bg-slate-50/50 border border-slate-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium transition-all" />
                 </div>
               </div>
 
-              <div className="pt-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">ราคาที่ขายได้จริง (ปอนด์)</label>
+              <div className="pt-4 border-t border-slate-100">
+                <label className="block text-sm font-black text-slate-800 mb-2">ราคาที่ขายได้จริง (ปอนด์)</label>
                 <div className="relative">
-                  <input type="number" required min="0" value={actualPrice} onChange={e => setActualPrice(e.target.value)} className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none pl-8 font-bold text-green-700" />
-                  <span className="absolute left-3 top-2 text-gray-500 font-bold">£</span>
+                  <input type="number" required min="0" value={actualPrice} onChange={e => setActualPrice(e.target.value)} className="w-full bg-slate-50/50 border border-slate-200 px-4 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-emerald-700 font-black text-xl pl-12 transition-all" placeholder="0" />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl">£</span>
                 </div>
               </div>
               
-              <div className="flex justify-end space-x-3 mt-8 pt-4 border-t">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100 font-medium transition-colors">
+              <div className="flex justify-end gap-3 mt-8 pt-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition-all active:scale-95 border border-transparent hover:border-slate-200">
                   ยกเลิก
                 </button>
-                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium transition-colors disabled:bg-gray-400">
+                <button type="submit" disabled={isSaving} className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-md shadow-blue-200 transition-all hover:shadow-lg active:scale-95 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none">
                   {isSaving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
                 </button>
               </div>
+
             </form>
           </div>
         </div>
