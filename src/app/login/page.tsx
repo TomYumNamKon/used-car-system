@@ -17,7 +17,7 @@ export default function LoginPage() {
       // เก็บข้อมูลไว้ใน localStorage (เบื้องต้น)
       localStorage.setItem('user', JSON.stringify(data));
       if (data.role === 'ADMIN') router.push('/admin/users');
-      else router.push('/');
+      else router.push('/evaluate');
     } else {
       alert(data.error);
     }
