@@ -27,8 +27,11 @@ export class MLController {
     }
 
     // ดึงรุ่นรถตามยี่ห้อ
-    static async getModelsByBrand(request: Request, { params }: { params: { brand: string } }) {
+    static async getModelsByBrand(request: Request, context: { params: Promise<{ brand: string }> }) {
         try {
+            // ต้องใส่ await เพื่อแกะกล่อง params ออกมาก่อน!
+            const params = await context.params; 
+            
             const data = await MLService.getModelsByBrand(params.brand);
             return NextResponse.json(data);
         } catch (error: any) {

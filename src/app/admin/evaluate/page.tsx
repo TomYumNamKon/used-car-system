@@ -1,19 +1,13 @@
 'use client';
-import { useState } from 'react';
-
-const carDataOptions = {
-  brands: ["Toyota", "Honda", "BMW", "Audi"],
-  models: {
-    "Toyota": ["Camry", "Corolla", "Vios", "Yaris"],
-    "Honda": ["Civic", "Accord", "City", "HR-V"],
-    "BMW": ["Series 3", "Series 5", "X3", "X5"],
-    "Audi": ["A4", "A6", "Q5", "TT"]
-  },
-  transmissions: ["Automatic", "Manual", "Semi-Auto"],
-  fuels: ["Petrol", "Diesel", "Hybrid", "Electric"]
-};
+import { useState, useEffect } from 'react';
 
 export default function AdminEvaluatePage() {
+  // --- 1. State สำหรับเก็บตัวเลือกที่ดึงจาก API ---
+  const [brands, setBrands] = useState<string[]>([]);
+  const [models, setModels] = useState<string[]>([]);
+  const [transmissions, setTransmissions] = useState<string[]>([]);
+  const [fuels, setFuels] = useState<string[]>([]);
+
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -32,10 +26,49 @@ export default function AdminEvaluatePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // --- 2. ดึงข้อมูล Features (ยี่ห้อ, เกียร์, เชื้อเพลิง) ตอนเปิดหน้าเว็บ ---
+  useEffect(() => {
+    const fetchFeatures = async () => {
+      try {
+        const res = await fetch('/api/ml/features'); // เรียกไปที่ API
+        if (res.ok) {
+          const data = await res.json();
+          // ปรับโครงสร้าง data ให้ตรงกับที่ API ของคุณส่งมา
+          setBrands(data.brands || []);
+          setTransmissions(data.transmissions || []);
+          setFuels(data.fuelTypes || data.fuels || []);
+        }
+      } catch (error) {
+        console.error("Error fetching features:", error);
+      }
+    };
+    fetchFeatures();
+  }, []);
+
+  // --- 3. ดึงข้อมูล Models เมื่อมีการเลือก/เปลี่ยนยี่ห้อ (Brand) ---
+  useEffect(() => {
+    const fetchModelsByBrand = async () => {
+      if (!formData.brand) {
+        setModels([]); // ถ้ายังไม่เลือกยี่ห้อ ให้ล้างรุ่นทิ้ง
+        return;
+      }
+      try {
+        const res = await fetch(`/api/ml/models/${formData.brand}`);
+        if (res.ok) {
+          const data = await res.json();
+          setModels(data.models || data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching models:", error);
+      }
+    };
+    fetchModelsByBrand();
+  }, [formData.brand]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
-    // ถ้าเปลี่ยนยี่ห้อ ให้เคลียร์ช่องรุ่นทิ้ง
+    // ถ้าเปลี่ยนยี่ห้อ ให้เคลียร์ช่องรุ่นทิ้ง เพื่อรอโหลดรุ่นใหม่
     if (name === 'brand') {
       setFormData({ ...formData, brand: value, model: '' });
     } else {
@@ -64,7 +97,7 @@ export default function AdminEvaluatePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: userData.userId, 
-          phone: formData.phone || "000-000-0000", // ถ้า Admin ไม่กรอกเบอร์ ให้ใส่ค่า Default
+          phone: formData.phone || "000-000-0000",
           carSpecs: {
             brand: formData.brand,
             model: formData.model,
@@ -100,42 +133,38 @@ export default function AdminEvaluatePage() {
 
   return (
     <div className="p-8">
-      {/* ส่วนหัว */}
       <div className="mb-6 border-b pb-4">
-        <h1 className="text-2xl font-bold text-gray-800">แบบฟอร์มประเมินราคารถ </h1>
+        <h1 className="text-2xl font-bold text-gray-800">แบบฟอร์มประเมินราคารถ</h1>
         <p className="text-gray-500 text-sm mt-1">ประเมินราคา (แสดงทั้งราคากลางและราคาเสนอซื้อ)</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* คอลัมน์ซ้าย: ฟอร์มกรอกข้อมูล */}
+        {/* ฟอร์มกรอกข้อมูล */}
         <div className="w-full lg:w-2/3 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <h2 className="text-lg font-bold text-blue-700 mb-4 flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             ระบุสเปครถยนต์
           </h2>
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* ยี่ห้อ & รุ่น */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">ยี่ห้อ (Brand)</label>
                 <select name="brand" required value={formData.brand} onChange={handleChange} className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900">
                   <option value="" disabled>เลือกยี่ห้อ</option>
-                  {carDataOptions.brands.map(b => <option key={b} value={b}>{b}</option>)}
+                  {brands.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">รุ่น (Model)</label>
-                <select name="model" required value={formData.model} onChange={handleChange} disabled={!formData.brand} className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-gray-100 text-gray-900">
-                  <option value="" disabled>{formData.brand ? 'เลือกรุ่น' : 'กรุณาเลือกยี่ห้อก่อน'}</option>
-                  {formData.brand && (carDataOptions.models as any)[formData.brand]?.map((m: string) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
+                <select name="model" required value={formData.model} onChange={handleChange} disabled={!formData.brand || models.length === 0} className="w-full border p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-gray-100 text-gray-900">
+                  <option value="" disabled>
+                    {!formData.brand ? 'กรุณาเลือกยี่ห้อก่อน' : (models.length === 0 ? 'กำลังโหลดรุ่น...' : 'เลือกรุ่น')}
+                  </option>
+                  {models.map((m: string) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* ปี, ไมล์, เครื่องยนต์ */}
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">ปี (Year)</label>
@@ -151,25 +180,23 @@ export default function AdminEvaluatePage() {
               </div>
             </div>
 
-            {/* เกียร์ & เชื้อเพลิง */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">เกียร์</label>
                 <select name="transmission" required value={formData.transmission} className="w-full p-2 border rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none bg-white" onChange={handleChange}>
                   <option value="" disabled>เลือกเกียร์</option>
-                  {carDataOptions.transmissions.map(t => <option key={t} value={t}>{t}</option>)}
+                  {transmissions.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">เชื้อเพลิง</label>
                 <select name="fuelType" required value={formData.fuelType} className="w-full p-2 border rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none bg-white" onChange={handleChange}>
                   <option value="" disabled>เลือกเชื้อเพลิง</option>
-                  {carDataOptions.fuels.map(f => <option key={f} value={f}>{f}</option>)}
+                  {fuels.map(f => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* ภาษี & MPG */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">ภาษี (Tax)</label>
@@ -186,12 +213,7 @@ export default function AdminEvaluatePage() {
               disabled={isLoading}
               className="w-full mt-4 bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 shadow-md transition duration-200 disabled:bg-gray-400"
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  กำลังวิเคราะห์ด้วย AI...
-                </span>
-              ) : 'ประเมินราคา'}
+              {isLoading ? 'กำลังวิเคราะห์ด้วย AI...' : 'ประเมินราคา'}
             </button>
           </form>
 
@@ -202,43 +224,27 @@ export default function AdminEvaluatePage() {
           )}
         </div>
 
-        {/* คอลัมน์ขวา: แสดงผลการประเมินราคา */}
+        {/* แสดงผลการประเมินราคา */}
         <div className="w-full lg:w-1/3 space-y-4">
-          
-          {/* กล่องแสดงราคาประเมิน AI (ต้นทุน) */}
           <div className={`p-6 rounded-xl border ${aiPrice !== null ? 'bg-blue-50 border-blue-200 shadow-md' : 'bg-gray-50 border-gray-200'}`}>
-            <h2 className="text-sm text-blue-800 font-semibold mb-2 flex items-center">
-              <span className="mr-2 text-lg"></span> ราคากลางประเมิน
-            </h2>
+            <h2 className="text-sm text-blue-800 font-semibold mb-2">ราคากลางประเมิน</h2>
             {aiPrice !== null ? (
               <div>
-                <p className="text-4xl font-bold text-blue-700 mb-2">
-                  ฿{aiPrice.toLocaleString()}
-                </p>
+                <p className="text-4xl font-bold text-blue-700 mb-2">£{aiPrice.toLocaleString()}</p>
                 <p className="text-xs text-gray-500">* นี่คือราคาต้นทุน 100% จาก ML Model</p>
               </div>
-            ) : (
-              <p className="text-gray-400 text-sm italic">รอผลการประเมิน...</p>
-            )}
+            ) : <p className="text-gray-400 text-sm italic">รอผลการประเมิน...</p>}
           </div>
 
-          {/* กล่องแสดงราคาเสนอซื้อ (หัก Margin) */}
           <div className={`p-6 rounded-xl border ${resultPrice !== null ? 'bg-green-50 border-green-200 shadow-md' : 'bg-gray-50 border-gray-200'}`}>
-            <h2 className="text-sm text-green-800 font-semibold mb-2 flex items-center">
-              <span className="mr-2 text-lg"></span> ราคาเสนอซื้อให้ลูกค้า
-            </h2>
+            <h2 className="text-sm text-green-800 font-semibold mb-2">ราคาเสนอซื้อให้ลูกค้า</h2>
             {resultPrice !== null ? (
               <div>
-                <p className="text-4xl font-bold text-green-600 mb-2">
-                  ฿{resultPrice.toLocaleString()}
-                </p>
+                <p className="text-4xl font-bold text-green-600 mb-2">£{resultPrice.toLocaleString()}</p>
                 <p className="text-xs text-green-700">* หักเปอร์เซ็นต์ส่วนต่างตามที่ตั้งค่าไว้ในระบบแล้ว</p>
               </div>
-            ) : (
-              <p className="text-gray-400 text-sm italic">รอผลการประเมิน...</p>
-            )}
+            ) : <p className="text-gray-400 text-sm italic">รอผลการประเมิน...</p>}
           </div>
-
         </div>
       </div>
     </div>

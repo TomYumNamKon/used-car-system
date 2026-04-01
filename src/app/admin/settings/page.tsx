@@ -105,15 +105,15 @@ export default function SystemSettingsPage() {
           <div className="space-y-2">
             <div className="flex justify-between items-center text-gray-700">
               <span>ราคากลางที่ AI ประเมินได้ (100%):</span>
-              <span className="font-medium">{mockRealPrice.toLocaleString()} บาท</span>
+              <span className="font-medium">{mockRealPrice.toLocaleString()} ปอนด์</span>
             </div>
             <div className="flex justify-between items-center text-red-600 border-b border-blue-200 pb-2">
               <span>หักส่วนต่าง ({marginPercent}%):</span>
-              <span>- {(mockRealPrice * (marginPercent / 100)).toLocaleString()} บาท</span>
+              <span>- {(mockRealPrice * (marginPercent / 100)).toLocaleString()} ปอนด์</span>
             </div>
             <div className="flex justify-between items-center text-lg mt-2 pt-1">
               <span className="font-bold text-gray-800">ผู้ขายรถ (Seller) จะเห็นราคา:</span>
-              <span className="font-bold text-green-600">{getPreviewPrice().toLocaleString()} บาท</span>
+              <span className="font-bold text-green-600">{getPreviewPrice().toLocaleString()} ปอนด์</span>
             </div>
           </div>
         </div>
