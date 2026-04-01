@@ -7,7 +7,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems = [
     { name: 'รายชื่อผู้ใช้งาน', href: '/admin/users' },
-    { name: 'ประเมินราคารถ', href: '/evaluate' }, // หรือหน้าประเมินของแอดมิน
+    { name: 'ประเมินราคารถ', href: '/admin/evaluate' }, // หรือหน้าประเมินของแอดมิน
     { name: 'ข้อมูลการขาย', href: '/admin/sales' },
     { name: 'ตั้งค่าระบบ', href: '/admin/settings' },
   ];
