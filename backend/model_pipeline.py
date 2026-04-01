@@ -168,3 +168,5 @@ class ML_Pipeline:
         models = sorted(filtered_df['model'].dropna().unique().tolist())
         
         return models
+    
+    

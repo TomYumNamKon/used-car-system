@@ -17,12 +17,15 @@ export class AuthController {
             const body = await request.json();
             const user = await AuthService.authenticateUser(body);
             
-            // แก้บรรทัดนี้: เพิ่ม userId กลับไปด้วย
-            return NextResponse.json({ 
-                success: true, 
-                role: user.role, 
-                userId: user.id 
-            });
+            return NextResponse.json({
+            message: "Login successful",
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role
+            }
+        });
+
         } catch (error: any) {
             return NextResponse.json({ error: error.message }, { status: 401 });
         }

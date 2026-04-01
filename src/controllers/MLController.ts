@@ -4,19 +4,22 @@ import { NextResponse } from 'next/server';
 export class MLController {
     static async triggerRetrain() {
         try {
-            // สั่งรัน Async Task เบื้องหลัง
-            await MLService.startAsyncRetrainTask();
+            // ใส่ await เพื่อให้เซิร์ฟเวอร์รอจนกว่าโมเดลจะเทรนเสร็จ
+            const result = await MLService.startAsyncRetrainTask();
 
-            // รีบตอบกลับ Admin ไม่ให้เว็บค้าง
+            // พอเสร็จแล้วค่อยตอบกลับหน้าเว็บ
             return NextResponse.json(
-                { message: "เริ่มกระบวนการสอนโมเดลเบื้องหลังแล้ว" }, 
-                { status: 202 } // 202 = Accepted
+                { 
+                    message: "เทรนโมเดลเสร็จสมบูรณ์แล้ว!",
+                    data: result // ส่งค่าความแม่นยำกลับไปด้วย
+                }, 
+                { status: 200 }
             );
         } catch (error: any) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
-        
     }
+
     static async getFeatures() {
         try {
             const data = await MLService.getFeatures();
@@ -26,12 +29,9 @@ export class MLController {
         }
     }
 
-    // ดึงรุ่นรถตามยี่ห้อ
     static async getModelsByBrand(request: Request, context: { params: Promise<{ brand: string }> }) {
         try {
-            // ต้องใส่ await เพื่อแกะกล่อง params ออกมาก่อน!
             const params = await context.params; 
-            
             const data = await MLService.getModelsByBrand(params.brand);
             return NextResponse.json(data);
         } catch (error: any) {
