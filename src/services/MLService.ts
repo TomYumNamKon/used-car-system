@@ -17,4 +17,15 @@ export class MLService {
     private static async fetchDatasetForTraining() {
         return await prisma.salesDataset.findMany();
     }
+    static async getFeatures() {
+        const response = await fetch(`${this.pythonAPIUrl}/features`, { cache: 'no-store' });
+        if (!response.ok) throw new Error("ดึงข้อมูลตัวเลือกจาก Python ไม่สำเร็จ");
+        return await response.json();
+    }
+
+    static async getModelsByBrand(brand: string) {
+        const response = await fetch(`${this.pythonAPIUrl}/models/${brand}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`ไม่พบรุ่นรถสำหรับยี่ห้อ ${brand}`);
+        return await response.json();
+    }
 }

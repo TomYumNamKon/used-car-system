@@ -15,5 +15,24 @@ export class MLController {
         } catch (error: any) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
+        
+    }
+    static async getFeatures() {
+        try {
+            const data = await MLService.getFeatures();
+            return NextResponse.json(data);
+        } catch (error: any) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+    }
+
+    // ดึงรุ่นรถตามยี่ห้อ
+    static async getModelsByBrand(request: Request, { params }: { params: { brand: string } }) {
+        try {
+            const data = await MLService.getModelsByBrand(params.brand);
+            return NextResponse.json(data);
+        } catch (error: any) {
+            return NextResponse.json({ error: error.message }, { status: 404 });
+        }
     }
 }
