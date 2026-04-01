@@ -6,12 +6,12 @@ export class MLService {
     static async startAsyncRetrainTask() {
         const dataset = await this.fetchDatasetForTraining();
         
-        // ยิงไป Python แบบ Fire & Forget (ไม่ต้อง await)
-        fetch(`${this.pythonAPIUrl}/retrain`, {
+        // แก้: ยิงไปที่ /preprocess และส่ง dataset ที่เป็น Array เข้าไปตรงๆ
+        fetch(`${this.pythonAPIUrl}/preprocess`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dataset })
-        }).catch(e => console.error("Trigger retrain failed:", e));
+            body: JSON.stringify(dataset) // เอาปีกกา { } ออก เพื่อส่ง Array ตรงๆ
+        }).catch(e => console.error("Trigger preprocess failed:", e));
     }
 
     private static async fetchDatasetForTraining() {
