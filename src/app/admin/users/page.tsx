@@ -1,37 +1,47 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-export default function AdminUserList() {
-    const [users, setUsers] = useState([]);
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState([]);
 
-    useEffect(() => {
-        // ดึงข้อมูลผู้ใช้ (ควรสร้าง API Route รองรับด้วย)
-        fetch('/api/admin/users')
-            .then(res => res.json())
-            .then(data => setUsers(data.users));
-    }, []);
+  useEffect(() => {
+    // พี่ต้องสร้าง API /api/admin/users เพื่อดึงรายชื่อ user ทั้งหมดด้วยนะครับ
+    fetch('/api/admin/users')
+      .then(res => res.json())
+      .then(data => setUsers(data.users || []));
+  }, []);
 
-    return (
-        <div className="p-8 bg-white min-h-screen text-black">
-            <h1 className="text-2xl font-bold mb-6">รายชื่อผู้สมัครสมาชิก (Sellers)</h1>
-            <table className="w-full border-collapse border border-gray-200">
-                <thead>
-                    <tr className="bg-gray-100">
-                        <th className="border p-2">Username</th>
-                        <th className="border p-2">เบอร์โทร</th>
-                        <th className="border p-2">จำนวนรายการประเมิน</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.map((u: any) => (
-                        <tr key={u.id} className="hover:bg-gray-50 cursor-pointer">
-                            <td className="border p-2 text-center">{u.username}</td>
-                            <td className="border p-2 text-center">{u.phone}</td>
-                            <td className="border p-2 text-center">{u._count?.leads || 0} รายการ</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-6 text-black">รายชื่อผู้ขายทั้งหมด</h1>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="w-full text-left text-black">
+          <thead className="bg-gray-100 border-b">
+            <tr>
+              <th className="p-4">Username</th>
+              <th className="p-4">เบอร์โทรศัพท์</th>
+              <th className="p-4">Role</th>
+              <th className="p-4">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user: any) => (
+              <tr key={user.id} className="border-b hover:bg-gray-50">
+                <td className="p-4">{user.username}</td>
+                <td className="p-4">{user.phone}</td>
+                <td className="p-4">
+                  <span className={`px-2 py-1 rounded text-xs ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <button className="text-blue-600 hover:underline">ดูข้อมูล</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
