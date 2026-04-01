@@ -1,36 +1,46 @@
+// prisma/schema.prisma
+
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "sqlite" // เปลี่ยนเป็น sqlite และลบ url ทิ้ง
+  provider = "sqlite"
 }
 
+// รวม User เป็นหนึ่งเดียว (ห้ามมีก้อน model User อื่นในไฟล์นี้อีก)
 model User {
   id            String          @id @default(uuid())
   username      String          @unique
-  phone         String
-  role          String          @default("SELLER") // SQLite ใช้ String แทน Enum
   password_hash String
+  phone         String
+  role          String          @default("SELLER") // แยกแยะ ADMIN หรือ SELLER
   leads         ValuationLead[]
 }
 
 model ValuationLead {
-  id            String     @id @default(uuid())
+  id            String   @id @default(uuid())
   user_id       String
-  user          User       @relation(fields: [user_id], references: [id])
-  car_specs     String     // SQLite ไม่มีประเภท Json ให้เก็บเป็น String (แปลง JSON.stringify เอาตอนเซฟ)
+  car_specs     String   
   ai_price      Float
   offered_price Float
-  status        String     @default("PENDING") // ใช้ String แทน Enum
   phone         String
-  created_at    DateTime   @default(now())
+  status        String   @default("PENDING")
+  created_at    DateTime @default(now())
+  user          User     @relation(fields: [user_id], references: [id])
 }
 
 model SalesDataset {
   id                String   @id @default(uuid())
-  car_specs         String   // ใช้ String เก็บค่า JSON
+  car_specs         String   
   actual_sale_price Float
-  created_at        DateTime @default(now())
+  sold_at           DateTime @default(now())
+}
+
+// ตารางตั้งค่าระบบที่ดึงค่า Margin มาใช้
+model SystemSetting {
+  id          String   @id @default("system_config")
+  margin_rate Float    @default(0.2)
+  updated_at  DateTime @updatedAt // ต้องเป็นตัวใหญ่ A ไม่มีขีดล่าง
 }
