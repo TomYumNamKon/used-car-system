@@ -16,8 +16,13 @@ export class AuthController {
         try {
             const body = await request.json();
             const user = await AuthService.authenticateUser(body);
-            // ปกติจะออก JWT Token ที่นี่
-            return NextResponse.json({ success: true, role: user.role });
+            
+            // แก้บรรทัดนี้: เพิ่ม userId กลับไปด้วย
+            return NextResponse.json({ 
+                success: true, 
+                role: user.role, 
+                userId: user.id 
+            });
         } catch (error: any) {
             return NextResponse.json({ error: error.message }, { status: 401 });
         }

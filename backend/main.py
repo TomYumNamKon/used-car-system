@@ -1,6 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Dict, Any
+import pandas as pd
 from model_pipeline import ML_Pipeline
 
 app = FastAPI()
@@ -41,8 +42,9 @@ async def predict(request: PredictRequest):
     }])
     
     # สั่ง Predict...
-    prediction = pipeline.predict(input_data)
-    return {"predicted_price": float(prediction[0])}
+    prediction = pipeline.predictPrice(input_data)
+    return {"predicted_price": float(prediction)}
+    # return {"predicted_price": float(prediction[0])}
 
 # POST_retrain
 @app.post("/retrain", status_code=202)

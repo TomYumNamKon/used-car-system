@@ -1,26 +1,33 @@
-// src/controllers/ValuationController.ts
 import { ValuationService } from '@/services/ValuationService';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma'; // ต้องเรียกใช้ prisma
 import { NextResponse } from 'next/server';
 
 export class ValuationController {
     static async evaluateCar(request: Request) {
         try {
             const body = await request.json();
-            const { userId, carSpecs, phone } = body;
+            
+            // 1. ตรวจบัตรประชาชน: เช็คว่า User มีในระบบจริงๆ ไหม
+            const user = await prisma.user.findUnique({
+                where: { id: body.userId }
+            });
 
-            // 1. ดึงข้อมูล User เพื่อดู Role
-            const user = await prisma.user.findUnique({ where: { id: userId } });
-            if (!user) throw new Error("ไม่พบผู้ใช้งาน");
+            if (!user) {
+                throw new Error("ไม่พบข้อมูลผู้ใช้งาน กรุณาเข้าสู่ระบบใหม่");
+            }
+            
+            // 2. ให้ Service ทำนายราคาตามปกติ
+            const lead = await ValuationService.calculateAndSaveValuation(
+                body.carSpecs, 
+                body.userId, 
+                body.phone
+            );
 
-            // 2. ประเมินราคาและบันทึก
-            const lead = await ValuationService.calculateAndSaveValuation(carSpecs, userId, phone);
-
-            // 3. ถ้าเป็น Admin ให้ส่งราคา AI ไปด้วย
-            return NextResponse.json({
-                success: true,
-                offeredPrice: lead.offered_price,
-                // ส่ง aiPrice เฉพาะ Admin เท่านั้น
+            // 3. แบ่งยศ (Role-Based Response)
+            return NextResponse.json({ 
+                success: true, 
+                displayedPrice: lead.offered_price, // ราคาที่เสนอซื้อ (เห็นทุกคน)
+                // ถ้าเป็น ADMIN ส่งราคา AI แท้ๆ กลับไปด้วย
                 aiPrice: user.role === 'ADMIN' ? lead.ai_price : null 
             });
         } catch (error: any) {

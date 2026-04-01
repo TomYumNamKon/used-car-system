@@ -31,8 +31,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
         <div className="p-4 border-t border-slate-700">
-          <button onClick={() => window.location.href = '/login'} className="text-red-400 hover:text-red-300">ออกจากระบบ</button>
-        </div>
+        <button onClick={() => { // <--- เติมปีกกาเปิดตรงนี้
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }} // <--- เติมปีกกาปิดตรงนี้
+        className="text-red-400 hover:text-red-300">
+            ออกจากระบบ
+        </button>
+    </div>
       </aside>
 
       {/* เนื้อหาหลักทางขวา */}
